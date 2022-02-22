@@ -43,7 +43,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Accepts URIs that begin with "example://gizmos” -->
                 <!-- Registered Callback URLs in TwitterApp -->
-                <data android:scheme="example"
+                <data android:scheme="mio"
                     android:host="" /> <!-- host is option -->
             </intent-filter>
         </activity>
