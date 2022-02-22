@@ -195,7 +195,6 @@ class TwitterLogin {
         details: "Please check your APIKey or APISecret.",
       );
     }
-
     final uri = Uri.parse(redirectURI);
     final completer = Completer<String?>();
     late StreamSubscription subscribe;
@@ -226,6 +225,7 @@ class TwitterLogin {
         /// Login to Twitter account with SFAuthenticationSession or ASWebAuthenticationSession.
         resultURI =
             await authBrowser.doAuth(requestToken.authorizeURI, uri.scheme);
+        print(resultURI);
       } else if (Platform.isAndroid) {
         // Login to Twitter account with chrome_custom_tabs.
         final success =
@@ -261,11 +261,12 @@ class TwitterLogin {
         throw CanceledByUserException();
       }
 
-      final token = await AccessToken.getAccessToken(
-        apiKey,
-        apiSecretKey,
+      final token = await AccessToken.getAccessTokenV2(
+        redirectURI,
         queries,
       );
+      print("@@@@@@@@@@@");
+      print(token);
 
       if ((token.authToken?.isEmpty ?? true) ||
           (token.authTokenSecret?.isEmpty ?? true)) {

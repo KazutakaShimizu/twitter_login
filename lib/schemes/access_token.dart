@@ -34,4 +34,25 @@ class AccessToken {
     }
     return AccessToken(params);
   }
+
+  static Future<AccessToken> getAccessTokenV2(
+    String redirectURI,
+    Map<String, String> queries,
+  ) async {
+    final body = {
+      "grant_type": "authorization_code",
+      "client_id": "QTdJUlBhTjFSb05pMnU0U2d0aUc6MTpjaQ",
+      "redirect_uri": redirectURI,
+      "code_verifier": "challenge",
+    };
+    print(body);
+    final params = await httpPostV2(
+      "https://api.twitter.com/2/oauth2/token",
+      body,
+    );
+    if (params == null) {
+      throw Exception();
+    }
+    return AccessToken(params);
+  }
 }

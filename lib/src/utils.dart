@@ -60,6 +60,28 @@ Future<Map<String, dynamic>>? httpPost(
   }
 }
 
+/// send http request
+Future<Map<String, dynamic>>? httpPostV2(
+  String url,
+  Map<String, dynamic> params,
+) async {
+  // try {
+  final http.Client _httpClient = http.Client();
+  final http.Response res = await _httpClient.post(Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': "application/x-www-form-urlencoded"
+      },
+      body: params);
+  if (res.statusCode != 200) {
+    throw HttpException("Failed ${res.reasonPhrase}");
+  }
+
+  return Uri.splitQueryString(res.body);
+  // } on Exception {
+  //   rethrow;
+  // }
+}
+
 Future<Map<String, dynamic>> httpGet(
   String url, {
   Map<String, dynamic>? query,

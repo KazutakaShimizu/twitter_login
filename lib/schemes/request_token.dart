@@ -53,12 +53,14 @@ class RequestToken {
       apiSecretKey,
     );
 
-    var authorizeURI = '$AUTHORIZE_URI?oauth_token=${params!['oauth_token']}';
-    //
+    // var authorizeURI = '$AUTHORIZE_URI?oauth_token=${params!['oauth_token']}';
+    var authorizeURI =
+        'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=QTdJUlBhTjFSb05pMnU0U2d0aUc6MTpjaQ&redirect_uri=$redirectURI&scope=users.read+tweet.read+follows.read&state=1878602977447.802&code_challenge=challenge&code_challenge_method=plain';
+
     if (forceLogin) {
       authorizeURI += '&force_login=true';
     }
-    final requestToken = RequestToken(params, authorizeURI);
+    final requestToken = RequestToken(params!, authorizeURI);
     if (requestToken.callbackConfirmed.toLowerCase() != 'true') {
       throw StateError('oauth_callback_confirmed mast be true');
     }
