@@ -95,7 +95,7 @@ class AuthorizationCodeV2 {
         '?response_type=code'
         '&client_id=$clientId'
         '&redirect_uri=$redirectURI'
-        '&scope=users.read+follows.read'
+        '&scope=users.read+tweet.read+follows.read'
         '&state=$state'
         '&code_challenge=$codeVerifier'
         '&code_challenge_method=plain';
