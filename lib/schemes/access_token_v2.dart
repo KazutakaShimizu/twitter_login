@@ -23,23 +23,22 @@ class AccessTokenV2 {
   }
 
   static Future<AccessTokenV2> getAccessToken({
+    required String clientId,
     required String authorizationCode,
+    required String codeVerifier,
     required String redirectURI,
   }) async {
     final body = {
       "grant_type": "authorization_code",
-      "client_id": "QTdJUlBhTjFSb05pMnU0U2d0aUc6MTpjaQ",
+      "client_id": clientId,
       "code": authorizationCode,
       "redirect_uri": redirectURI,
-      "code_verifier": "challenge",
+      "code_verifier": codeVerifier,
     };
-    final params = await httpPostV2(
-      "https://api.twitter.com/2/oauth2/token",
+    final params = await httpPost(
+      ACCESS_TOKEN_URI,
       body,
     );
-    print("############");
-    print(params);
-    print(params);
     if (params == null) {
       throw Exception('Unexpected Response');
     }
