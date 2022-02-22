@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:twitter_login/twitter_login.dart';
 
@@ -128,21 +131,13 @@ class _MyAppState extends State<MyApp> {
     /// to ensure the correct users account is authorized.
     /// If you want to implement Twitter account switching, set [force_login] to true
     /// login(forceLogin: true);
-    final authResult = await twitterLogin.loginV2();
-    switch (authResult.status) {
-      case TwitterLoginStatus.loggedIn:
-        // success
-        print('====== Login success ======');
-        break;
-      case TwitterLoginStatus.cancelledByUser:
-        // cancel
-        print('====== Login cancel ======');
-        break;
-      case TwitterLoginStatus.error:
-      case null:
-        // error
-        print('====== Login error ======');
-        break;
+    try {
+      final accessToken = await twitterLogin.loginV2();
+      print('login successed');
+      print(accessToken.toJson());
+    } catch (e) {
+      print('login failed');
+      print(e);
     }
   }
 }

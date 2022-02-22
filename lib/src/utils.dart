@@ -65,21 +65,22 @@ Future<Map<String, dynamic>>? httpPostV2(
   String url,
   Map<String, dynamic> params,
 ) async {
-  // try {
   final http.Client _httpClient = http.Client();
-  final http.Response res = await _httpClient.post(Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': "application/x-www-form-urlencoded"
-      },
-      body: params);
+  final http.Response res = await _httpClient.post(
+    Uri.parse(url),
+    headers: <String, String>{
+      'Content-Type': "application/x-www-form-urlencoded"
+    },
+    body: params,
+  );
   if (res.statusCode != 200) {
     throw HttpException("Failed ${res.reasonPhrase}");
   }
 
-  return Uri.splitQueryString(res.body);
-  // } on Exception {
-  //   rethrow;
-  // }
+  print("%%%%%%%%%%%%%%%%");
+  print(res.body);
+
+  return jsonDecode(res.body);
 }
 
 Future<Map<String, dynamic>> httpGet(

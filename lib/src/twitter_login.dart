@@ -5,10 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:twitter_login/entity/auth_result.dart';
 import 'package:twitter_login/entity/user.dart';
 import 'package:twitter_login/schemes/access_token.dart';
+import 'package:twitter_login/schemes/access_token_v2.dart';
 import 'package:twitter_login/schemes/request_token.dart';
 import 'package:twitter_login/src/auth_browser.dart';
 import 'package:twitter_login/src/exception.dart';
-import 'package:twitter_login/src/oauth_2.dart';
 
 /// The status after a Twitter login flow has completed.
 enum TwitterLoginStatus {
@@ -178,23 +178,23 @@ class TwitterLogin {
     }
   }
 
-  Future<AuthResult> loginV2({bool forceLogin = false}) async {
+  Future<AccessTokenV2> loginV2({bool forceLogin = false}) async {
     String? resultURI;
-    RequestToken requestToken;
-    try {
-      requestToken = await RequestToken.getRequestToken(
-        apiKey,
-        apiSecretKey,
-        redirectURI,
-        forceLogin,
-      );
-    } on Exception {
-      throw PlatformException(
-        code: "400",
-        message: "Failed to generate request token.",
-        details: "Please check your APIKey or APISecret.",
-      );
-    }
+    // RequestToken requestToken;
+    // try {
+    //   requestToken = await RequestToken.getRequestToken(
+    //     apiKey,
+    //     apiSecretKey,
+    //     redirectURI,
+    //     forceLogin,
+    //   );
+    // } on Exception {
+    //   throw PlatformException(
+    //     code: "400",
+    //     message: "Failed to generate request token.",
+    //     details: "Please check your APIKey or APISecret.",
+    //   );
+    // }
     final uri = Uri.parse(redirectURI);
     final completer = Completer<String?>();
     late StreamSubscription subscribe;
@@ -220,104 +220,55 @@ class TwitterLogin {
       },
     );
 
-    try {
-      if (Platform.isIOS) {
-        /// Login to Twitter account with SFAuthenticationSession or ASWebAuthenticationSession.
-        resultURI =
-            await authBrowser.doAuth(requestToken.authorizeURI, uri.scheme);
-        print(resultURI);
-      } else if (Platform.isAndroid) {
-        // Login to Twitter account with chrome_custom_tabs.
-        final success =
-            await authBrowser.open(requestToken.authorizeURI, uri.scheme);
-        if (!success) {
-          throw PlatformException(
-            code: '200',
-            message:
-                'Could not open browser, probably caused by unavailable custom tabs.',
-          );
-        }
-        resultURI = await completer.future;
-        subscribe.cancel();
-      } else {
+    var authorizeURI =
+        'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=QTdJUlBhTjFSb05pMnU0U2d0aUc6MTpjaQ&redirect_uri=$redirectURI&scope=users.read+tweet.read+follows.read&state=1878602977447.802&code_challenge=challenge&code_challenge_method=plain';
+
+    if (Platform.isIOS) {
+      /// Login to Twitter account with SFAuthenticationSession or ASWebAuthenticationSession.
+      resultURI = await authBrowser.doAuth(authorizeURI, uri.scheme);
+    } else if (Platform.isAndroid) {
+      // Login to Twitter account with chrome_custom_tabs.
+      final success = await authBrowser.open(authorizeURI, uri.scheme);
+      if (!success) {
         throw PlatformException(
-          code: '100',
-          message: 'Not supported by this os.',
+          code: '200',
+          message:
+              'Could not open browser, probably caused by unavailable custom tabs.',
         );
       }
-
-      // The user closed the browser.
-      if (resultURI?.isEmpty ?? true) {
-        throw CanceledByUserException();
-      }
-
-      final queries = Uri.splitQueryString(Uri.parse(resultURI!).query);
-      if (queries['error'] != null) {
-        throw Exception('Error Response: ${queries['error']}');
-      }
-
-      // The user cancelled the login flow.
-      if (queries['denied'] != null) {
-        throw CanceledByUserException();
-      }
-
-      final token = await AccessToken.getAccessTokenV2(
-        redirectURI,
-        queries,
-      );
-      print("@@@@@@@@@@@");
-      print(token);
-
-      if ((token.authToken?.isEmpty ?? true) ||
-          (token.authTokenSecret?.isEmpty ?? true)) {
-        return AuthResult(
-          authToken: token.authToken,
-          authTokenSecret: token.authTokenSecret,
-          status: TwitterLoginStatus.error,
-          errorMessage: 'Failed',
-          user: null,
-        );
-      }
-
-      final user = await User.getUserDataV2(
-        apiKey,
-        apiSecretKey,
-        token.authToken!,
-        token.authTokenSecret!,
-        token.userId!,
-      );
-
-      final bearerToken = await Oauth2.getBearerToken(
-          apiKey: apiKey, apiSecretKey: apiSecretKey);
-
-      if (bearerToken?.isEmpty ?? true) {
-        throw Exception();
-      }
-
-      return AuthResult(
-        bearerToken: bearerToken,
-        authToken: token.authToken,
-        authTokenSecret: token.authTokenSecret,
-        status: TwitterLoginStatus.loggedIn,
-        errorMessage: null,
-        user: user,
-      );
-    } on CanceledByUserException {
-      return AuthResult(
-        authToken: null,
-        authTokenSecret: null,
-        status: TwitterLoginStatus.cancelledByUser,
-        errorMessage: 'The user cancelled the login flow.',
-        user: null,
-      );
-    } catch (error) {
-      return AuthResult(
-        authToken: null,
-        authTokenSecret: null,
-        status: TwitterLoginStatus.error,
-        errorMessage: error.toString(),
-        user: null,
+      resultURI = await completer.future;
+      subscribe.cancel();
+    } else {
+      throw PlatformException(
+        code: '100',
+        message: 'Not supported by this os.',
       );
     }
+    print('resultURI: ' + resultURI.toString());
+
+    // The user closed the browser.
+    if (resultURI?.isEmpty ?? true) {
+      throw CanceledByUserException();
+    }
+
+    final queries = Uri.splitQueryString(Uri.parse(resultURI!).query);
+    if (queries['error'] != null) {
+      throw Exception('Error Response: ${queries['error']}');
+    }
+
+    // The user cancelled the login flow.
+    if (queries['denied'] != null) {
+      throw CanceledByUserException();
+    }
+
+    final authorizationCode = queries['code'];
+    if (authorizationCode == null) {
+      throw Exception('Error: No authorization code found');
+    }
+
+    return await AccessTokenV2.getAccessToken(
+      authorizationCode: authorizationCode,
+      redirectURI: redirectURI,
+    );
   }
 }
